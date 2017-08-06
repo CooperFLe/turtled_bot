@@ -49,8 +49,8 @@ function onCommand(session, command) {
     case 'api':
       api(session)
       break
-    case 'connect':
-      connect(session)
+    case 'verify':
+      verifyCoinbaseAccount(session)
       break
     case 'checkBalances':
       checkBalances(session)
@@ -108,11 +108,13 @@ function setAPIKey(session, message) {
    session.set('apiKey',apiKey)
    session.set('coinbaseConnected',false)
    session.reply('Your API Key is now: ' + session.get('apiKey'))
-     if(!session.get('secretKey'))
+     if(!session.get('secretKey')) {
        session.reply('Now you need to set your secret key')
+       session.reply('Please reply with "Secret Key: [your key]"')
+     }
      else {
       let controls = [
-        {type: 'button', label: 'Connect to Coinbase', value: 'connect'},
+        {type: 'button', label: 'Verify Coinbase Details', value: 'verify'},
         {type: 'button', label: 'Reset', value: 'reset'}
       ]
       session.reply(SOFA.Message({
@@ -129,11 +131,13 @@ function setSecretKey(session,message) {
   session.set('secretKey',secretKey)
   session.set('coinbaseConnected',false)
   session.reply('Your secret key is now: ' + session.get('secretKey'))
-  if(!session.get('apiKey'))
+  if(!session.get('apiKey')) {
     session.reply('Now you need to set your API key')
+    session.reply('Please reply with "API Key: [your key]"')
+  }
   else{
     let controls = [
-      {type: 'button', label: 'Connect to Coinbase', value: 'connect'},
+      {type: 'button', label: 'Verify Coinbase Details', value: 'verify'},
       {type: 'button', label: 'Reset', value: 'reset'}
     ]
     session.reply(SOFA.Message({
@@ -144,7 +148,7 @@ function setSecretKey(session,message) {
   }
 }
 
-function connect(session) {
+function verifyCoinbaseAccount(session) {
   let client = new Client({'apiKey': session.get('apiKey'), 'apiSecret': session.get('secretKey')})
   client.getAccounts({}, function(err,accounts) {
     if(!accounts){
