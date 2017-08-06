@@ -52,6 +52,9 @@ function onCommand(session, command) {
     case 'connect':
       connect(session)
       break
+    case 'checkBalances':
+      checkBalances(session)
+      break
     case 'donate':
       donate(session)
       break
@@ -89,7 +92,8 @@ function onPayment(session, message) {
 
 function welcome(session) {
   session.set('isFirstTimer', true)
-  session.reply('Hello! I am the Turtled Bot.sendMessage(session, ')
+  session.set('coinbaseConnected',false)
+  session.reply('Hello! I am the Turtled Bot.')
 }
 
 function api(session) {
@@ -102,15 +106,28 @@ function setAPIKey(session, message) {
    let apiKey = session.get('apiKey')
    apiKey = message.body.substring(9)
    session.set('apiKey',apiKey)
+   session.set('coinbaseConnected',false)
    session.reply('Your API Key is now: ' + session.get('apiKey'))
      if(!session.get('secretKey'))
        session.reply('Now you need to set your secret key')
+     else {
+      let controls = [
+        {type: 'button', label: 'Connect to Coinbase', value: 'connect'},
+        {type: 'button', label: 'Reset', value: 'reset'}
+      ]
+      session.reply(SOFA.Message({
+        body: 'Your API key and secret keys are now set',
+        controls: controls,
+        showKeyboard: false,
+      }))
+     }
 }
 
 function setSecretKey(session,message) {
   let secretKey = session.get('secretKey')
   secretKey = message.body.substring(12)
   session.set('secretKey',secretKey)
+  session.set('coinbaseConnected',false)
   session.reply('Your secret key is now: ' + session.get('secretKey'))
   if(!session.get('apiKey'))
     session.reply('Now you need to set your API key')
@@ -128,14 +145,27 @@ function setSecretKey(session,message) {
 }
 
 function connect(session) {
-  var client = new Client({'apiKey': session.get('apiKey'), 'apiSecret': session.get('secretKey')})
+  let client = new Client({'apiKey': session.get('apiKey'), 'apiSecret': session.get('secretKey')})
+  client.getAccounts({}, function(err,accounts) {
+    if(!accounts){
+      session.set('coinbaseConnected',false)
+      session.reply('Error: No accounts found.')
+    }
+    else {
+      session.set('coinbaseConnected',true)
+      session.reply("Coinbase connected!")
+    }
+  })
+  
+}
+
+function checkBalances(session) {
+  let client = new Client({'apiKey': session.get('apiKey'), 'apiSecret': session.get('secretKey')})
   client.getAccounts({}, function(err, accounts) {
     accounts.forEach(function(acct) {
-      console.log('my bal: ' + acct.balance.amount + ' for ' + acct.name);
+      session.reply('my bal: ' + acct.balance.amount + ' for ' + acct.name);
     });
   });
-  session.set('coinbaseClient',client)
-  session.reply("Coinbase connected!")
 }
 
 function donate(session) {
@@ -148,10 +178,19 @@ function donate(session) {
 function help(session) {
   let isFirstTimer = (session.get('isFirstTimer'))
   let controls = [
+      {type: 'button', label: 'View Coinbase Accounts', value: 'checkBalances'},
+      {type: 'button', label: 'Reset', value: 'reset'},
+      {type: 'button', label: 'Donate', value: 'donate'},
+  ]
+
+  if(!session.get('coinbaseConnected')) {
+    controls = [
       {type: 'button', label: 'Set up Coinbase', value: 'api'},
       {type: 'button', label: 'Reset', value: 'reset'},
       {type: 'button', label: 'Donate', value: 'donate'}
     ]
+  }
+    
     if(isFirstTimer){ 
      session.reply("I am a simple bot designed to help you interact with your Coinbase account.")
      session.reply("In order to use me, you will need to submit your API key because I am too lazy to learn how to implement OAuth2.")
