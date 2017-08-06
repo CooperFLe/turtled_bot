@@ -62,7 +62,7 @@ function onCommand(session, command) {
       help(session)
       break
     case 'reset':
-      reset(session)
+      restoreDefaults(session)
       break
     }
 }
@@ -157,7 +157,7 @@ function verifyCoinbaseAccount(session) {
     }
     else {
       session.set('coinbaseConnected',true)
-      session.reply("Coinbase connected!")
+      sendMessage(session, 'Coinbase connected!')
     }
   })
   
@@ -167,9 +167,9 @@ function checkBalances(session) {
   let client = new Client({'apiKey': session.get('apiKey'), 'apiSecret': session.get('secretKey')})
   client.getAccounts({}, function(err, accounts) {
     accounts.forEach(function(acct) {
-      session.reply('my bal: ' + acct.balance.amount + ' for ' + acct.name);
-    });
-  });
+      sendMessage(session, acct.name + ': ' + acct.native_balance.amount + ' ' + acct.native_balance.currency);
+    })
+  })
 }
 
 function donate(session) {
@@ -181,6 +181,26 @@ function donate(session) {
 
 function help(session) {
   let isFirstTimer = (session.get('isFirstTimer'))
+  if(isFirstTimer){ 
+    session.reply("I am a simple bot designed to help you interact with your Coinbase account.")
+    session.reply("In order to use me, you will need to submit your API key because I am too lazy to learn how to implement OAuth2.")
+    session.reply("My creator doesn't have access to your API key or your Coinbase account, but you don't have to believe me or him. You can check my code!") 
+    session.reply("While you are checking out the code, feel free to contribute to the project.")
+    sendMessage(session, 'The source code can be found at https://github.com/cooperfle/toshi-app-js')
+    session.set('isFirstTimer',false)
+    }else{
+        sendMessage(session, 'I am a simple bot designed to help you interact with your Coinbase account.')
+    }
+}
+
+function restoreDefaults(session) {
+  //Clear set values
+  session.reply('Type any message to restart a conversation with me!')
+  session.reset()
+}
+// HELPERS
+
+function sendMessage(session, message) {
   let controls = [
       {type: 'button', label: 'View Coinbase Accounts', value: 'checkBalances'},
       {type: 'button', label: 'Reset', value: 'reset'},
@@ -194,39 +214,7 @@ function help(session) {
       {type: 'button', label: 'Donate', value: 'donate'}
     ]
   }
-    
-    if(isFirstTimer){ 
-     session.reply("I am a simple bot designed to help you interact with your Coinbase account.")
-     session.reply("In order to use me, you will need to submit your API key because I am too lazy to learn how to implement OAuth2.")
-     session.reply("My creator doesn't have access to your API key or your Coinbase account, but you don't have to believe me or him. You can check my code!") 
-     session.reply("While you are checking out the code, feel free to contribute to the project.")
-     session.reply(SOFA.Message({
-       body: "The source code can be found at https://github.com/cooperfle/toshi-app-js",
-       controls: controls,
-       showKeyboard: false,
-     }))
-     session.set('isFirstTimer',false)
-    }else{
-      session.reply(SOFA.Message({
-        body: "I am a simple bot designed to help you interact with your Coinbase account.",
-        controls: controls,
-        showKeyboard: false,
-      }))
-    }
-}
 
-function reset(session) {
-  //Clear set values
-  session.reset()
-}
-// HELPERS
-
-function sendMessage(session, message) {
-  let controls = [
-    {type: 'button', label: 'Reset', value: 'reset'},
-    {type: 'button', label: 'Donate', value: 'donate'},
-    {type: 'help', label: 'Help', value: 'help'}
-  ]
   session.reply(SOFA.Message({
     body: message,
     controls: controls,
