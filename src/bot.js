@@ -34,10 +34,12 @@ bot.onEvent = function(session, message) {
 }
 
 function onMessage(session, message) {
-  if(message.body.substring(0,8).toUpperCase() == 'API KEY:') {
+  if(message.body.substring(0,9).toUpperCase() == 'API KEY: ') {
     setAPIKey(session, message)
   }
-  else {
+  else if(message.body.substring(0,12).toUpperCase() == 'SECRET KEY: ') {
+    setSecretKey(session, message)
+  } else {
     help(session)
   }
 }
@@ -46,6 +48,9 @@ function onCommand(session, command) {
   switch (command.content.value) {
     case 'api':
       api(session)
+      break
+    case 'connect':
+      connect(session)
       break
     case 'donate':
       donate(session)
@@ -99,7 +104,38 @@ function setAPIKey(session, message) {
    session.set('apiKey',apiKey)
    session.reply('Your API Key is now: ' + session.get('apiKey'))
      if(!session.get('secretKey'))
-       session.reply('Now you need to set your API secret key')
+       session.reply('Now you need to set your secret key')
+}
+
+function setSecretKey(session,message) {
+  let secretKey = session.get('secretKey')
+  secretKey = message.body.substring(12)
+  session.set('secretKey',secretKey)
+  session.reply('Your secret key is now: ' + session.get('secretKey'))
+  if(!session.get('apiKey'))
+    session.reply('Now you need to set your API key')
+  else{
+    let controls = [
+      {type: 'button', label: 'Connect to Coinbase', value: 'connect'},
+      {type: 'button', label: 'Reset', value: 'reset'}
+    ]
+    session.reply(SOFA.Message({
+      body: 'Your API key and secret keys are now set',
+      controls: controls,
+      showKeyboard: false,
+    }))
+  }
+}
+
+function connect(session) {
+  var client = new Client({'apiKey': session.get('apiKey'), 'apiSecret': session.get('secretKey')})
+  client.getAccounts({}, function(err, accounts) {
+    accounts.forEach(function(acct) {
+      console.log('my bal: ' + acct.balance.amount + ' for ' + acct.name);
+    });
+  });
+  session.set('coinbaseClient',client)
+  session.reply("Coinbase connected!")
 }
 
 function donate(session) {
