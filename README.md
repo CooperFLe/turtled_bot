@@ -13,6 +13,6 @@ Todo:
 - [x] Setup Coinbase API
 - [x] Create way for users to add own Coinbase API
 - [x] Show users their balances in their Coinbase accounts
-- [] Show balances in USD
-- [] Create menu item to select a specific account/wallet
-- [] Implement OAuth2
+- [ ] Show balances in USD
+- [ ] Create menu item to select a specific account/wallet
+- [ ] Implement OAuth2
