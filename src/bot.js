@@ -21,14 +21,7 @@ bot.onEvent = function(session, message) {
       onPayment(session, message)
       break
     case 'PaymentRequest':
-        session.reply("Here is your Ether ;)");
-        session.reply(SOFA.Message({
-          body: "Here is your Ether",
-          attachments: [{
-            "type": "image",
-            "url": "ethereum.jpg"
-        }]
-      })) 
+        session.reply('Ether requests are not supported right now')
       break
   }
 }
